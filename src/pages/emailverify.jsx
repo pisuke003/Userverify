@@ -1,4 +1,4 @@
-import React, { useRef, useContext, useEffect } from 'react';
+import React, { useRef, useContext, useEffect, useState } from 'react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/Appcontex';
@@ -9,12 +9,31 @@ function Emailverify() {
   const navigate = useNavigate();
   const { backendUrl, getUserData, isLoggedin, userData } = useContext(AppContext);
   const inputRefs = useRef([]);
+  const [statusChecked, setStatusChecked] = useState(false);
 
   useEffect(() => {
-    if (isLoggedin && userData?.isAccountVerified) {
-      navigate('/');
+    const checkUser = async () => {
+      await getUserData();
+      setStatusChecked(true);
+    };
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    if (statusChecked) {
+   
+      if (!isLoggedin) {
+        navigate('/login'); 
+        return;
+      }
+      
+    
+      if (isLoggedin && userData?.isAccountVerified) {
+        navigate('/');
+        return;
+      }
     }
-  }, [isLoggedin, userData, navigate]);
+  }, [statusChecked, isLoggedin, userData, navigate]);
 
   const handleInput = (e, index) => {
     if (e.target.value.length > 0 && index < inputRefs.current.length - 1) {
@@ -58,10 +77,10 @@ function Emailverify() {
   };
 
 
-  useEffect(()=>{
-    isLoggedin&& userData && userData.isAccountVerified && navigate('/')
+  if (!isLoggedin) {
+    return null;
+  }
 
-  },[isLoggedin,userData])
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400 relative">
       <img
@@ -70,33 +89,23 @@ function Emailverify() {
         alt="Logo"
         className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
       />
-
-      <form
-        onSubmit={onSubmitHandler}
-        className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
-      >
+      <form onSubmit={onSubmitHandler} className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
         <h1 className="text-white text-2xl font-semibold text-center mb-4">Email Verify OTP</h1>
-        <p className="text-center mb-6 text-indigo-300">
-          Enter the 6-digit code sent to your email id
-        </p>
-
+        <p className="text-center mb-6 text-indigo-300">Enter the 6-digit code sent to your email id</p>
         <div className="flex justify-between mb-6">
-          {Array(6)
-            .fill(0)
-            .map((_, index) => (
-              <input
-                key={index}
-                type="text"
-                maxLength="1"
-                required
-                ref={(el) => (inputRefs.current[index] = el)}
-                onInput={(e) => handleInput(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
-              />
-            ))}
+          {Array(6).fill(0).map((_, index) => (
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              required
+              ref={(el) => (inputRefs.current[index] = el)}
+              onInput={(e) => handleInput(e, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
+            />
+          ))}
         </div>
-
         <button
           type="submit"
           className="w-full py-3 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded-full"
